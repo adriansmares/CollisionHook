@@ -294,7 +294,7 @@ class ExtensionConfig(object):
             "-fvisibility=hidden",
         ]
         cxx.cxxflags += [
-            "-std=c++14",
+            "-std=c++17",
             "-fno-threadsafe-statics",
             "-Wno-non-virtual-dtor",
             "-Wno-overloaded-virtual",
@@ -462,7 +462,7 @@ class ExtensionConfig(object):
 
         compiler.defines += ["SOURCE_ENGINE=" + sdk.code]
 
-        if sdk.name in ["sdk2013", "bms"] and compiler.like("gcc"):
+        if sdk.name in ["sdk2013", "bms", "pvkii", "tf2", "css", "dods", "hl2dm", "l4d2"] and compiler.like("gcc"):
             # The 2013 SDK already has these in public/tier0/basetypes.h
             compiler.defines.remove("stricmp=strcasecmp")
             compiler.defines.remove("_stricmp=strcasecmp")
@@ -631,6 +631,17 @@ Extension.configure()
 
 if Extension.use_auto_versioning():
     Extension.generated_headers = builder.Build("buildbot/Versioning")
+
+# SourceMod's CDetour is built on safetyhook, pinned to the same commit as SourceMod's public/safetyhook.
+class SafetyHookShim(object):
+    def __init__(self):
+        self.all_targets = Extension.all_targets
+        self.libsafetyhook = {}
+
+
+SafetyHook = SafetyHookShim()
+builder.Build("safetyhook/AMBuilder", {"SafetyHook": SafetyHook})
+Extension.libsafetyhook = SafetyHook.libsafetyhook
 
 builder.targets = builder.CloneableList(Extension.all_targets)
 # Add additional buildscripts here
